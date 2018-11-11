@@ -1,20 +1,21 @@
 ---
 title: "Retorno sobre o investimento em um MBA"
-output: html_document
+html_document:
+  toc: true
+  theme: united
 ---
 
 ```{r include = FALSE}
 library(dplyr)
 ```
 
-
 # Objetivo
 
 O objetivo desta análise é verificar se existe retorno financeiro em realizar um curso de MBA.
 
-Desejamos saber se uma estudante com as características abaixo deve investir um certo valor no curso, determinando se haverá retorno após a graduação.
+Desejamos saber se uma estudante com as características abaixo deve investir na realização do curso, determinando qual será o seu salário após a graduação.
 
-## A estudante possui as caracteristicas abaixo
+## A estudante possui as caracteristicas abaixo:
 
 A) Mulher
 B) Língua mãe não é o inglês
@@ -23,16 +24,16 @@ D) Aluna de 1o quartil
 E) 8 anos de experiência
 F) 29 anos
 
+## Dados da amostragem
 
-## Dados da amostra
-Os seguintes dados, de uma amostragem de 274 estudantes, foram coletados.
+Os seguintes dados, de 274 estudantes observados, foram coletados.
 
 ```{r}
 mba <- read.csv("data/mba.csv", stringsAsFactors = FALSE)
 names(mba)
 ```
 
-## Os atributos de interesse são
+## As variáveis de interesse presentes na amostragem são:
 
 A) **sex**, o sexo da estudante, no caso feminino. Temos codificada esta informação com os valores 1 (masculino) ou 2 (feminino).
 B) **frstlang**, first language, se a língua mãe é inglesa ou não. Temos codificada esta informação com os valores 1 (língua mãe é inglês) ou 2 (língua mãe **não** é inglês).
@@ -45,35 +46,37 @@ F) **age**, a idade em anos do estudante.
 # Análise exploratória do salário
 
 Desejamos saber qual o salário de um ex-estudante após se formar.
-Este atributo corresponde à **salary**.
+Este atributo corresponde à variável **salary** em nossa base.
 
-## Uma análise inicial mostra que:
+## Uma análise exploratória sumarisa o salário como:
 
 Média salarial: 
 ```{r}
 mean(mba$salary)
 ```
+
 Mediana salarial:
 ```{r}
 median(mba$salary)
 ```
 
+Histograma salário:
 ```{r}
 hist(mba$salary)
 ```
 
-## Primeira filtragem
+## Valores de salário inválidos.
 
-A discrepância entre a média e a mediana leva à análise das amostras salariais.
+A discrepância entre a média e a mediana leva ao questionamento dos valores salariais.
 
 Existem salários com os valores 998 e 999. Estes valores são utilizados na amostragem para denotar profissionais não alocados.
-Assim, estas amostras, com valores 998 e 999 serão excluídas da análise.
+Assim, estas observações, com valores 998 e 999, serão excluídas da análise.
 
 ```{r}
 mba2 <- mba %>% filter(salary != 998 & salary != 999)
 ```
 
-## Os dados da amostra resultante possuem o perfil:
+## Os dados da amostragem após a filtragem possuem o perfil:
 
 ```{r}
 mean(mba2$salary)
@@ -81,10 +84,10 @@ median(mba2$salary)
 hist(mba2$salary)
 ```
 
-## Segunda filtragem
+## Valores de salário com zero.
 
-Vemos ainda que que existem salários com valores abaixo do realisticamente esperado. 
-Explorando a base de dados podemos constatar amostrar com valor igual a zero, totalizando 90 amostras do total de 193.
+Vemos ainda que que existem salários com valores não realisticos (zero).
+Explorando a base de dados podemos constatar observações com valor igual a zero, totalizando 90 de um total de 193.
 
 ```{r}
 length(mba2$salary)
@@ -107,38 +110,50 @@ hist(mba3$salary)
 
 # Análises de relevância
 
-## Mulher ??
-- H_0: salário não é influenciada pelo gênero
-- H_A: salário é influenciada pelo gênero
+Neste ponto, desejamos identificar quais variáveis influenciam ou não o salário.
+Assim, iremos realizar uma análise de relevância para as variáveis que conhecemos da estudante alvo.
+
+## Gênero influencia no salário?
+
+Desejamos saber se o gênero influencia no salário final. Iremos neste caso utilizar o teste "One way ANOVA".
+Temos portanto:
+
+- Hipótese Nula, H_0: salário não é influenciada pelo gênero.
+- Hipótese Alternativa, H_A: salário é influenciada pelo gênero.
 
 ```{r}
 boxplot(formula = mba3$salary ~ mba3$sex)
 oneway.test(mba3, formula = salary ~ sex)
 ```
 
-Retirar o outlier feminino
+Verificamos que existe um salário que é um outlier, correspondente à uma executiva empregada em um grupo pertencente a sua familia, sendo assim estatisticamente distorcivo.
+
+Retiramos portanto a observação do outlier feminino
 ```{r}
 mba4 <- filter(mba3, salary != max(mba3$salary))
 ```
 
-Sem o outlier feminino
+Sem o outlier feminino, podemos realizar o teste novamente e constatar a relevância do gênero para a análise
 ```{r}
 boxplot(formula = mba4$salary ~mba4$sex)
 oneway.test(mba4, formula = salary ~ sex)
 ```
 
-p-value = 0; concluímos que o salário é influenciado pelo gênero
+Com p-value perto de 0, concluímos que o salário é influenciado pelo gênero.
 
 ## Língua materna
+
+Desejamos saber se a língua materna influencia no salário final. 
+Uma primeira análise das observações mostra um número estatisticamente baixo de estudantes que não possuem a língua inglesa como lingua mãe (apenas 6 do total de 102 observações)
+Assim, optamos por não utilizar esta variável na análise.
+
 ```{r}
+# 1 - inglês | 2 - outros
 unique(mba4$frstlang)
 sum(mba4$frstlang == 1)
 sum(mba4$frstlang == 2)
-```
-1 - inglês | 2 - outros
 
-não vamos utilizar frstlang, pois a quantidade de 
-frstlang == 2 é muito baixa (n = 6)
+```
 
 ## Quartil
 ```{r}
@@ -159,7 +174,7 @@ summary(modelo1)
 ```
 p-value = 0.00179, quartil influencia no salário 
 
-## Modelo 2
+## Modelo 2 ()
 - H_0: anos de experiência não influencia no salário
 - H_A: anos de experiência influencia no salário
 ```{r}
@@ -216,9 +231,9 @@ summary(modelo5)
 sex <- 2
 work_yrs <- 8
 quarter <- 1
-Salary <- 107057.65 - 9977.52 * sex + 932.41 * work_yrs - 3388.7 * quarter
+salary <- 107057.65 - 9977.52 * sex + 932.41 * work_yrs - 3388.7 * quarter
 
-Salary
+salary
 ```
 
 
