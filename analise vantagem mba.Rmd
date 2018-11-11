@@ -1,0 +1,234 @@
+---
+title: "Retorno sobre o investimento em um MBA"
+output: html_document
+---
+
+```{r include = FALSE}
+library(dplyr)
+```
+
+
+# Objetivo
+
+O objetivo desta análise é verificar se existe retorno financeiro em realizar um curso de MBA.
+
+Desejamos saber se uma estudante com as características abaixo deve investir um certo valor no curso, determinando se haverá retorno após a graduação.
+
+## A estudante possui as caracteristicas abaixo
+
+A) Mulher
+B) Língua mãe não é o inglês
+C) GMAT 680-700
+D) Aluna de 1o quartil
+E) 8 anos de experiência
+F) 29 anos
+
+
+## Dados da amostra
+Os seguintes dados, de uma amostragem de 274 estudantes, foram coletados.
+
+```{r}
+mba <- read.csv("data/mba.csv", stringsAsFactors = FALSE)
+names(mba)
+```
+
+## Os atributos de interesse são
+
+A) **sex**, o sexo da estudante, no caso feminino. Temos codificada esta informação com os valores 1 (masculino) ou 2 (feminino).
+B) **frstlang**, first language, se a língua mãe é inglesa ou não. Temos codificada esta informação com os valores 1 (língua mãe é inglês) ou 2 (língua mãe **não** é inglês).
+C) **gmat_tot**, o valor total que o estudante obteve no GMAT.
+D) **quarter**, em que quartil o estudante possui desempenho nos cursos já realizados.
+E) **work_yrs**, a quantidade em anos que o estudante possui de experiência.
+F) **age**, a idade em anos do estudante.
+
+
+# Análise exploratória do salário
+
+Desejamos saber qual o salário de um ex-estudante após se formar.
+Este atributo corresponde à **salary**.
+
+## Uma análise inicial mostra que:
+
+Média salarial: 
+```{r}
+mean(mba$salary)
+```
+Mediana salarial:
+```{r}
+median(mba$salary)
+```
+
+```{r}
+hist(mba$salary)
+```
+
+## Primeira filtragem
+
+A discrepância entre a média e a mediana leva à análise das amostras salariais.
+
+Existem salários com os valores 998 e 999. Estes valores são utilizados na amostragem para denotar profissionais não alocados.
+Assim, estas amostras, com valores 998 e 999 serão excluídas da análise.
+
+```{r}
+mba2 <- mba %>% filter(salary != 998 & salary != 999)
+```
+
+## Os dados da amostra resultante possuem o perfil:
+
+```{r}
+mean(mba2$salary)
+median(mba2$salary)
+hist(mba2$salary)
+```
+
+## Segunda filtragem
+
+Vemos ainda que que existem salários com valores abaixo do realisticamente esperado. 
+Explorando a base de dados podemos constatar amostrar com valor igual a zero, totalizando 90 amostras do total de 193.
+
+```{r}
+length(mba2$salary)
+sum(mba2$salary == 0)
+```
+
+Filtramos a amostragem retirando também estas amostras.
+
+```{r}
+mba3 <- mba2 %>% filter(salary != 0)
+```
+
+## Os dados da amostra resultante possuem o perfil abaixo, mais próximo ao esperado.
+
+```{r}
+mean(mba3$salary)
+median(mba3$salary)
+hist(mba3$salary)
+```
+
+# Análises de relevância
+
+## Mulher ??
+- H_0: salário não é influenciada pelo gênero
+- H_A: salário é influenciada pelo gênero
+
+```{r}
+boxplot(formula = mba3$salary ~ mba3$sex)
+oneway.test(mba3, formula = salary ~ sex)
+```
+
+Retirar o outlier feminino
+```{r}
+mba4 <- filter(mba3, salary != max(mba3$salary))
+```
+
+Sem o outlier feminino
+```{r}
+boxplot(formula = mba4$salary ~mba4$sex)
+oneway.test(mba4, formula = salary ~ sex)
+```
+
+p-value = 0; concluímos que o salário é influenciado pelo gênero
+
+## Língua materna
+```{r}
+unique(mba4$frstlang)
+sum(mba4$frstlang == 1)
+sum(mba4$frstlang == 2)
+```
+1 - inglês | 2 - outros
+
+não vamos utilizar frstlang, pois a quantidade de 
+frstlang == 2 é muito baixa (n = 6)
+
+## Quartil
+```{r}
+boxplot(mba4$salary ~ mba4$quarter)
+```
+
+# Modelos de regressão
+
+## Modelo 1 (Salário ~ Quartil)
+
+Teste de hipóste:
+- H_0: quartil não influencia o salário
+- H_A: quartil influencia o salário
+
+```{r}
+modelo1 <- lm(mba4, formula = salary ~ quarter)
+summary(modelo1)
+```
+p-value = 0.00179, quartil influencia no salário 
+
+## Modelo 2
+- H_0: anos de experiência não influencia no salário
+- H_A: anos de experiência influencia no salário
+```{r}
+modelo2 <- lm(mba4, formula = salary ~ work_yrs)
+summary(modelo2)
+```
+
+## Modelo 3
+- H_0: idade não influencia no salário
+- H_A: idade influencia no salário
+```{r}
+modelo3 <- lm(mba4, formula = salary ~ age)
+summary(modelo3)
+```
+
+## Modelo 4
+```{r}
+modelo4 <- lm(mba4, formula = salary ~ work_yrs + age)
+summary(modelo4)
+```
+usar work_yrs pois age pode ser discriminatório
+
+## Modelo 5
+```{r}
+modelo5 <- lm(mba4, formula = salary ~ sex + work_yrs + quarter)
+summary(modelo5)
+```
+
+## Modelo 6
+```{r}
+modelo5 <- lm(mba4, formula = salary ~ sex + work_yrs + quarter + gmat_tot)
+summary(modelo5)
+```
+
+# Conclusão
+
+## Influencial no resultado:
+- Sexo
+- Quartil
+- Idade
+
+## Não influenciam
+- GMAT
+
+## Covariancia
+- Idade e Anos de Experiência, eliminado Idade.
+
+## Não conclusivos,
+- Lingua materna
+
+## Valor experado
+
+```{r}
+sex <- 2
+work_yrs <- 8
+quarter <- 1
+Salary <- 107057.65 - 9977.52 * sex + 932.41 * work_yrs - 3388.7 * quarter
+
+Salary
+```
+
+
+
+
+
+
+
+
+
+
+
+
