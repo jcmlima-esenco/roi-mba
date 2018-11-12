@@ -268,16 +268,19 @@ Concluimos que dentre as variáveis estudadas, temos abaixo que:
 
 ## Valor experado
 
-De posso do modelo final (Modelo5), o valor esperado pela estudante, ao final de seu MBA será de XXXXX.
-Em um intervalo de confiança de 95%, o salário da candidata é entre YYYYY e ZZZZZ.
+De posso do modelo final (Modelo5), o valor esperado pela estudante, ao final de seu MBA será de 103197 USD.
+Em um intervalo de confiança de 95%, o salário da candidata é entre 96873 USD e 109521 USD.
 
 ```{r}
-sex <- 2
-work_yrs <- 8
-quarter <- 1
-salary <- 107057.65 - 9977.52 * sex + 932.41 * work_yrs - 3388.7 * quarter
+student <- data.frame(
+  sex = 2,
+  work_yrs = 8,
+  quarter = 1
+)
 
-salary
+predict(modelo5, newdata = student, interval = "confidence")
+
+
 ```
 
 
