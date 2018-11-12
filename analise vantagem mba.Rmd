@@ -156,60 +156,101 @@ sum(mba4$frstlang == 2)
 ```
 
 ## Quartil
+
+O desempenho passado do estudante pode ou não influenciar no salário. Os alunos são divididos nos 4 quartis e seu salário analisado abaixo.
+
 ```{r}
 boxplot(mba4$salary ~ mba4$quarter)
 ```
 
+Vista a diferença entre os quartis, decidimos por continuar com esta variável em nossa análise.
+
 # Modelos de regressão
+
+Os modelos de regressão serão utilizados para validar ou invalidar diversas hipóteses.
+As principais perguntas são se uma variável impacta ou não no salário do profissional.
+Assim, via de regra, teremos como hipótese Nula que esta variável não impacta, e como hipótese alternativa que dada variável impacta no salário.
+Abaixo analisamos as variáveis.
 
 ## Modelo 1 (Salário ~ Quartil)
 
-Teste de hipóste:
-- H_0: quartil não influencia o salário
-- H_A: quartil influencia o salário
+Teste de hipótese:
+- H_0: O quartil de performance do aluno não influencia o seu salário.
+- H_A: O quartil de performance do aluno influência o salário.
 
 ```{r}
 modelo1 <- lm(mba4, formula = salary ~ quarter)
 summary(modelo1)
 ```
-p-value = 0.00179, quartil influencia no salário 
 
-## Modelo 2 ()
-- H_0: anos de experiência não influencia no salário
-- H_A: anos de experiência influencia no salário
+Como o p-value para esta análise possui valor abaixo de 0,05, optamos por considerar o quartil no possível modelo preditivo do salário.
+
+## Modelo 2 (Salário x Anos de Experiência)
+
+Teste de hipótese:
+- H_0: Os anos de experiência não influenciam no salário.
+- H_A: Os anos de experiência influenciam no salário.
+
 ```{r}
 modelo2 <- lm(mba4, formula = salary ~ work_yrs)
 summary(modelo2)
 ```
 
-## Modelo 3
-- H_0: idade não influencia no salário
-- H_A: idade influencia no salário
+Como o p-value para esta análise possui valor abaixo de 0,05, optamos por considerar os anos de experiência no possível modelo preditivo do salário.
+
+## Modelo 3 (Salário x Idade)
+- H_0: A idade não influencia no salário.
+- H_A: A idade influencia no salário.
+
 ```{r}
 modelo3 <- lm(mba4, formula = salary ~ age)
 summary(modelo3)
 ```
 
-## Modelo 4
+Visto que o p-value para esta análise possui valor abaixo de 0,05, optamos por considerar a idade no possível modelo preditivo final do salário.
+
+## Modelo 4 (Salário x Anos de experiência e Idade)
+
+Dado que entendemos que a idade e a experiência do aluno podem estar potencialmente correlacionadas, analisamos a influência de ambas as variáveis em conjunto.
+
+- H_0: A idade e os anos de experiência não influenciam no salário.
+- H_A: A idade e os anos de experiência influenciam no salário.
+
 ```{r}
 modelo4 <- lm(mba4, formula = salary ~ work_yrs + age)
 summary(modelo4)
 ```
-usar work_yrs pois age pode ser discriminatório
 
-## Modelo 5
+Vemos que, quando analisadas em conjunto, os anos de experiência possuem um valor p de 0,91.
+Porém, como individualmente os anos de experiência são relevantes, e dado que a idade é um fator aparentemente refletido nos anos de experiência, optamos por não utilizar a idade no possível modelo.
+
+## Modelo 5 (Salário x Sexo, Anos de experiência e quartil de performance)
+
+Buscamos enriquecer o modelo preditivo com 3 variáveis, sexo, anos de experiência e quartil de performance.
+
+- H_0: A svariáveis em conjunto não influenciam no salário.
+- H_A: As variáveis em conjunto influenciam no salário.
+
 ```{r}
 modelo5 <- lm(mba4, formula = salary ~ sex + work_yrs + quarter)
 summary(modelo5)
 ```
+Podemos verificar valores p abaixo de 0,05, com aumento da qualidade preditiva. Assim manteremos como modelo candidato o modelo5.
 
-## Modelo 6
+## Modelo 6 (Salário x Sexo, Anos de experiência, quartil de performance e GMAT Total)
+
+Buscamos enriquecer o modelo preditivo, que além das 3 variáveis acima, pode também conter o GMAT do estudante.
+
 ```{r}
-modelo5 <- lm(mba4, formula = salary ~ sex + work_yrs + quarter + gmat_tot)
-summary(modelo5)
+modelo6 <- lm(mba4, formula = salary ~ sex + work_yrs + quarter + gmat_tot)
+summary(modelo6)
 ```
 
+Verifica-se que a inclusão do GMAT não é relevante, possuindo um valor p de 0,42.
+
 # Conclusão
+
+Concluimos que dentre as variáveis estudadas, temos abaixo que:
 
 ## Influencial no resultado:
 - Sexo
@@ -219,13 +260,16 @@ summary(modelo5)
 ## Não influenciam
 - GMAT
 
-## Covariancia
+## Covariância
 - Idade e Anos de Experiência, eliminado Idade.
 
-## Não conclusivos,
+## Não conclusivos
 - Lingua materna
 
 ## Valor experado
+
+De posso do modelo final (Modelo5), o valor esperado pela estudante, ao final de seu MBA será de XXXXX.
+Em um intervalo de confiança de 95%, o salário da candidata é entre YYYYY e ZZZZZ.
 
 ```{r}
 sex <- 2
@@ -235,6 +279,9 @@ salary <- 107057.65 - 9977.52 * sex + 932.41 * work_yrs - 3388.7 * quarter
 
 salary
 ```
+
+
+
 
 
 
